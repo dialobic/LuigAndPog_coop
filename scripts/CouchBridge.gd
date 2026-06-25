@@ -1,96 +1,75 @@
 extends Node
 
-signal experience_data_received(data: Dictionary)
-signal session_stats_received(data: Dictionary)
+# --- Gameplay flow (direct eval) ---
+func start_gameplay() -> void:
+	JavaScriptBridge.eval("window.CouchGames.gameplayStart()")
 
-var _sdk = null
+func stop_gameplay() -> void:
+	JavaScriptBridge.eval("window.CouchGames.gameplayEnd()")
 
+func complete_gameplay() -> void:
+	JavaScriptBridge.eval("window.CouchGames.gameplayComplete()")
 
-func _ready():
-	await get_tree().process_frame
-	_find_sdk()
+# --- Helper to get base URL ---
+func _get_base_url() -> String:
+	if OS.get_name() == "HTML5":
+		return JavaScriptBridge.eval("window.location.origin")
+	return "https://couchgames.io"
 
-func _find_sdk():
-	if OS.has_feature("web"):
-		_sdk = JavaScriptBridge.get_interface("CouchGames")
-		
-		if _sdk:
-			print("SDK CouchGames success!")
+# --- HTTP request helper ---
+func _http_get(endpoint: String) -> Dictionary:
+	# Local development fallback (non-HTML5)
+	if OS.get_name() != "HTML5":
+		if endpoint == "/api/game/getExperienceData":
+			return {
+				"success": true,
+				"payload": {
+					"date": "2026-06-03T12:27:46.492Z",
+					"files": [],
+					"type": "monthly",
+					"mode": "standalone",
+					"experienceIndex": 0,
+					"title": "Local Test",
+					"experienceId": "local-test-id",
+					"experienceUrl": "",
+					"experienceName": "Local Test"
+				}
+			}
+		elif endpoint == "/api/game/getSessionStats":
+			return {
+				"success": true,
+				"payload": {
+					"cumulativeGameplayTimeMs": 5000,
+					"gameplayCompleted": true
+				}
+			}
 		else:
-			# try again
-			await get_tree().create_timer(1.0).timeout
-			_find_sdk()
+			return {"success": false, "message": "Unknown endpoint"}
 
-# --- CALLS ---
+	# HTML5 (live) request
+	var http = HTTPRequest.new()
+	add_child(http)
+	var url = _get_base_url() + endpoint
+	var error = http.request(url)
+	if error != OK:
+		http.queue_free()
+		return {"success": false, "message": "HTTP request failed"}
+	var response = await http.request_completed
+	http.queue_free()
+	var body = response[3].get_string_from_utf8()
+	var json = JSON.parse_string(body)
+	# Safety checks
+	if json and json is Dictionary and json.has("success"):
+		if json.success:
+			return {"success": true, "payload": json.payload}
+		else:
+			return {"success": false, "message": json.get("message", "Unknown error")}
+	else:
+		return {"success": false, "message": "Invalid response"}
 
-func start_gameplay():
-	if _sdk:
-		_sdk.gameplayStart()
+# --- Data retrieval via HTTP ---
+func get_experience_data() -> Dictionary:
+	return await _http_get("/api/game/getExperienceData")
 
-func stop_gameplay():
-	if _sdk:
-		_sdk.gameplayEnd()
-
-func complete_gameplay():
-	if _sdk:
-		_sdk.gameplayComplete()
-
-# Called from EndScene to request data
-func request_experience_data() -> void:
-	if OS.get_name() != "HTML5":
-		var dummy = {
-			"success": true,
-			"payload": {
-				"date": null,
-				"files": [],
-				"type": "regular",
-				"experienceIndex": 0,
-				"experienceId": "local",
-				"experienceUrl": null
-			}
-		}
-		experience_data_received.emit(dummy)
-		return
-	
-	# Create a JavaScript callback that will receive the promise result
-	var callback = JavaScriptBridge.create_callback(_on_experience_data_callback)
-	# Execute async JS code that calls the callback when done
-	JavaScriptBridge.eval("""
-        window.CouchGames.getExperienceData().then(result => {
-            // Call the Godot callback with the JSON string
-            %s(JSON.stringify(result));
-        }).catch(err => {
-            %s(JSON.stringify({ success: false, message: err.message }));
-        });
-	""" % [callback.get_js_object(), callback.get_js_object()])
-
-func _on_experience_data_callback(args: Array) -> void:
-	var json_str = args[0]
-	var data = JSON.parse_string(json_str)
-	experience_data_received.emit(data)
-
-func request_session_stats() -> void:
-	if OS.get_name() != "HTML5":
-		var dummy = {
-			"success": true,
-			"payload": {
-				"cumulativeGameplayTimeMs": 0,
-				"gameplayCompleted": false
-			}
-		}
-		session_stats_received.emit(dummy)
-		return
-	
-	var callback = JavaScriptBridge.create_callback(_on_session_stats_callback)
-	JavaScriptBridge.eval("""
-        window.CouchGames.getSessionStats().then(result => {
-            %s(JSON.stringify(result));
-        }).catch(err => {
-            %s(JSON.stringify({ success: false, message: err.message }));
-        });
-	""" % [callback.get_js_object(), callback.get_js_object()])
-
-func _on_session_stats_callback(args: Array) -> void:
-	var json_str = args[0]
-	var data = JSON.parse_string(json_str)
-	session_stats_received.emit(data)
+func get_session_stats() -> Dictionary:
+	return await _http_get("/api/game/getSessionStats")

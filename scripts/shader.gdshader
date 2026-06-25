@@ -32,11 +32,21 @@ void fragment() {
     else if (distance(rgb, yellow_originale) < tolerance) {
         final_rgb = color_fg.rgb;
     } 
-    else {
-        // 3. Effetto seppia
-        float gray = dot(rgb, vec3(0.299, 0.587, 0.114));
-        final_rgb = vec3(gray) * vec3(0.99, 0.96, 0.7);
-    }
+	else {
+	        // 3. Effetto seppia dinamico basato su color_bg
+	        float gray = dot(rgb, vec3(0.299, 0.587, 0.114));
+	        
+	        // Estraiamo la direzione del colore di sfondo (normalizzandola per mantenere la "temperatura")
+	        // Aggiungiamo un piccolissimo offset (0.001) per evitare divisioni per zero se color_bg fosse nero puro.
+	        vec3 tinta_bg = normalize(color_bg.rgb + vec3(0.001));
+	        
+	        // Bilanciamo l'intensità della tinta. 
+	        // Mixiamo il grigio puro con la tinta del background per non avere un effetto troppo violento.
+	        // Puoi variare lo 0.5 (es. 0.3 per meno influenza dello sfondo, 0.7 per più influenza)
+	        vec3 tinta_seppia = mix(vec3(1.0), tinta_bg * 1.5, 0.5);
+	        
+	        final_rgb = vec3(gray) * tinta_seppia;
+	    }
 
     // --- AGGIUNTA GRANA STATICA ---
     // Generiamo un valore di rumore tra 0.0 e 1.0 basato sulla posizione del pixel

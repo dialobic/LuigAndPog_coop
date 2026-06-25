@@ -18,6 +18,7 @@ extends Node2D
 @onready var take_player = $SoundPool/TakePlayer
 @onready var woosh_player = $SoundPool/WooshPlayer
 @onready var wrong_player = $SoundPool/WrongPlayer
+@onready var success_player = $SoundPool/SuccessPlayer
 
 var current_room: Node = null
 var sparkle_timer: Timer = null
@@ -370,8 +371,8 @@ func load_room(room_key: String) -> void:
 
 	if actual_key == "end": # finale
 		GameState.inventory_items.clear() # probabilmente superfluo
-		CouchBridge.stop_gameplay()
-		CouchBridge.complete_gameplay()
+		#CouchBridge.stop_gameplay()
+		#CouchBridge.complete_gameplay()
 		get_tree().change_scene_to_file("res://scenes/EndScene.tscn")
 		return   # exit the function immediately
 
@@ -506,7 +507,7 @@ func collect_to_inventory(obj: InteractiveObject) -> void:
 	temp_sprite.texture = obj.sprite.texture
 	temp_sprite.centered = true
 	temp_sprite.global_position = obj.global_position
-	temp_sprite.z_index = 5
+	temp_sprite.z_index = 98
 	add_child(temp_sprite)
 	obj.queue_free()
 	var target_pos = inventory_container.global_position + inventory_container.size / 2
@@ -560,6 +561,8 @@ func _play_named_sound(sound_name: String) -> void:
 	match sound_name:
 		"music":
 			music_player.play()
+		"success":
+			success_player.play()
 		"done":
 			done_player.pitch_scale = randf_range(0.95, 1.05)
 			done_player.play()

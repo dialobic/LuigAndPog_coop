@@ -74,6 +74,13 @@ func _create_particle(data: Dictionary) -> void:
 	# Start emitting
 	particle.emitting = true
 	
+	# Play sound if specified in "item" field
+	var sound = data.get("item", "")
+	if sound != "":
+		var game_scene = get_parent().get_parent()
+		if game_scene and game_scene.has_method("_play_named_sound"):
+			game_scene._play_named_sound(sound)
+	
 	# Mark as played
 	GameState.particle_played[room_key] = true
 
@@ -93,21 +100,47 @@ func _create_particle2(data: Dictionary) -> void:
 		particle.finished.connect(particle.queue_free)
 
 func _create_deco_object(data: Dictionary, order: int) -> void:
-	var deco = Sprite2D.new()
+	var deco
+	var textures_str = data.get("item", "")
+	if textures_str != "" and "," in textures_str:
+		# Animated deco
+		deco = AnimatedSprite2D.new()
+		var frames = SpriteFrames.new()
+		var texture_names = textures_str.split(",")
+		for i in range(texture_names.size()):
+			var tex_name = texture_names[i].strip_edges()
+			var texture = JSONLoader.get_level_texture(GameState.current_level, tex_name)
+			if texture:
+				frames.add_frame("default", texture)
+		if frames.get_frame_count("default") > 0:
+			frames.set_animation_speed("default", 1.0 / 0.5)  # 3.333 FPS = 0.3 sec per frame
+			deco.sprite_frames = frames
+			deco.animation = "default"
+			deco.play()
+			# Random start frame to break sync
+			deco.frame = randi() % deco.sprite_frames.get_frame_count("default")
+		else:
+			# Fallback to static sprite if no valid textures
+			deco = Sprite2D.new()
+			var icon = data.get("icona", "")
+			if icon != "":
+				var texture = JSONLoader.get_level_texture(GameState.current_level, icon)
+				if texture:
+					deco.texture = texture
+	else:
+		# Static deco
+		deco = Sprite2D.new()
+		var icon = data.get("icona", "")
+		if icon != "":
+			var texture = JSONLoader.get_level_texture(GameState.current_level, icon)
+			if texture:
+				deco.texture = texture
+	
 	objects_container.add_child(deco)
 	deco.z_index = order
-	
-	# Posiziona
 	var pos = data.get("pos", [0, 0])
 	deco.position = Vector2(pos[0], pos[1])
-	
-	# Imposta texture
-	var icon = data.get("icona", "")
-	if icon != "":
-		var texture = JSONLoader.get_level_texture(GameState.current_level, icon)
-		if texture:
-			deco.texture = texture
-			deco.centered = true
+	deco.centered = true   # For Sprite2D, for AnimatedSprite2D it's also valid
 
 func _handle_cambio(data: Dictionary) -> void:
 	var target = data.get("target", "")

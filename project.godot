@@ -14,10 +14,10 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 [application]
 
-config/name="LuigPog2"
+config/name="LuigPog3"
 run/main_scene="uid://da1k827gnvovs"
-config/features=PackedStringArray("4.6", "GL Compatibility")
-boot_splash/bg_color=Color(0.6862745, 0.8, 0.6, 1)
+config/features=PackedStringArray("4.7", "GL Compatibility")
+boot_splash/bg_color=Color(0.7490196, 0.6627451, 0.83137256, 1)
 boot_splash/use_filter=false
 config/icon="res://icon.svg"
 

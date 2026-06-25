@@ -35,7 +35,7 @@ theme_override_font_sizes/font_size = 21
 text = ">> PLAY <<"
 flat = true
 script = ExtResource("1_pyko2")
-level_name = "coop2"
+level_name = "coop3"
 
 [node name="RandomPaletteButton" type="Button" parent="." unique_id=877150529]
 layout_mode = 0
