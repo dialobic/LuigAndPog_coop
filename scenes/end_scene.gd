@@ -11,11 +11,11 @@ func _ready() -> void:
 	#print("EndScene _ready")
 	
 	# 3. stop & Mark complete
-	CouchBridge.stop_gameplay()
-	CouchBridge.complete_gameplay()
+	CouchGames.gameplay_end()
+	CouchGames.gameplay_start()
 	
 	# 1. Get experience data
-	var exp = await CouchBridge.get_experience_data()
+	var exp := await CouchGames.get_experience_data()
 	print("Experience data: ", exp)
 	
 	if exp.success:
@@ -34,7 +34,7 @@ func _ready() -> void:
 		experience_name = "this game"
 	
 	# 2. Get session stats
-	var stats = await CouchBridge.get_session_stats()
+	var stats = await CouchGames.get_session_stats()
 	print("Session stats: ", stats)
 	
 

@@ -25,10 +25,15 @@ config/icon="res://icon.svg"
 
 GameState="*res://scripts/GameState.gd"
 CouchBridge="*uid://cvbvgukw66dhk"
+CouchGames="*uid://dc77t8o2adovr"
 
 [display]
 
 window/stretch/mode="canvas_items"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/couch-games-sdk-godot-ab6379d6463ce218976cdd80d71f685e3f1ad3da/plugin.cfg")
 
 [input_devices]
 

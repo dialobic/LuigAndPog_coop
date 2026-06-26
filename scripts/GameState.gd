@@ -22,6 +22,7 @@ var level_progress: Dictionary = {}
 
 func _ready() -> void:
 	load_progress()
+	CouchGames.init()
 
 func mark_item_as_used(item_key: String) -> void:
 	used_items[item_key] = true
