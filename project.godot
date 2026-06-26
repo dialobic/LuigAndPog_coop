@@ -15,7 +15,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="LuigPog3"
-run/main_scene="uid://da1k827gnvovs"
+run/main_scene="uid://byf7wwixpndi6"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 boot_splash/bg_color=Color(0.7490196, 0.6627451, 0.83137256, 1)
 boot_splash/use_filter=false
@@ -25,10 +25,15 @@ config/icon="res://icon.svg"
 
 GameState="*res://scripts/GameState.gd"
 CouchBridge="*uid://cvbvgukw66dhk"
+CouchGames="*uid://dc77t8o2adovr"
 
 [display]
 
 window/stretch/mode="canvas_items"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/couch-games-sdk-godot-ab6379d6463ce218976cdd80d71f685e3f1ad3da/plugin.cfg")
 
 [input_devices]
 
